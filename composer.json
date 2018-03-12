@@ -1,0 +1,18 @@
+{
+    "name": "diatem-net/elasticsearch_manager",
+    "description": "Manages Drupal nodes indexation in Drupal.",
+    "type": "drupal-module",
+    "license": "GPL-3.0+",
+    "authors": [
+        {
+            "name": "Samuel Marchal",
+            "role": "smarchal@diatem.net"
+        }
+    ],
+    "require": {
+        "composer/installers": "~1.0",
+        "elasticsearch/elasticsearch": "~6.0",
+        "monolog/monolog": "~1.0"
+    },
+    "minimum-stability": "dev"
+}

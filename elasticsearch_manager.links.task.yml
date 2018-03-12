@@ -1,0 +1,30 @@
+elasticsearch_manager.config_tab:
+  route_name: elasticsearch_manager.config
+  title: Configuration
+  title_context: elasticsearch_manager
+  weight: 5
+  base_route: elasticsearch_manager.config
+
+elasticsearch_manager.types_tab:
+  route_name: elasticsearch_manager.types
+  title: Types
+  title_context: elasticsearch_manager
+  weight: 10
+  base_route: elasticsearch_manager.config
+
+elasticsearch_manager.mapping_tab:
+  route_name: elasticsearch_manager.mapping
+  title: Mapping
+  title_context: elasticsearch_manager
+  weight: 15
+  base_route: elasticsearch_manager.config
+
+elasticsearch_manager.mapping_tab.types:
+  deriver: 'Drupal\elasticsearch_manager\Plugin\Derivative\MappingTypesTasks'
+
+elasticsearch_manager.indexation_tab:
+  route_name: elasticsearch_manager.indexation
+  title: Indexation
+  title_context: elasticsearch_manager
+  weight: 20
+  base_route: elasticsearch_manager.config

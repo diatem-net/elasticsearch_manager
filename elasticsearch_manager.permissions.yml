@@ -1,0 +1,4 @@
+administer elasticsearch_manager:
+  title: 'Administer ElasticSearch Manager'
+  description: 'Administer access to module'
+  restrict access: true
