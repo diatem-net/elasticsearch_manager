@@ -3,19 +3,20 @@
 namespace Drupal\elasticsearch_manager\ElasticSearch;
 
 use Elasticsearch\Client;
-use Drupal\elasticsearch_connector\Entity\Cluster;
-use Drupal\elasticsearch_connector\ElasticSearch\ClientManager;
+use Elasticsearch\ClientBuilder;
 use Drupal\Core\Render\Markup;
 
 class ElasticSearchManager
 {
 
+  const LOGS_DISABLED = 0;
+
   /**
-    * ElasticSearch cluster.
+    * ElasticSearch host.
     *
-    * @var \Drupal\elasticsearch_connector\Entity\Cluster
+    * @var string
     */
-  private $cluster;
+  private $host;
 
   /**
     * ElasticSearch index.
@@ -40,13 +41,17 @@ class ElasticSearchManager
 
   public function __construct()
   {
-    $this->cluster = Cluster::load(\Drupal::config('elasticsearch_manager.settings')->get('cluster'));
-    $this->index   = \Drupal::config('elasticsearch_manager.settings')->get('index');
+    $this->host  = \Drupal::config('elasticsearch_manager.settings')->get('host');
+    $this->index = \Drupal::config('elasticsearch_manager.settings')->get('index');
+    $this->logs  = (bool) \Drupal::config('elasticsearch_manager.settings')->get('debug')['debug'];
 
-    $clientManager = \Drupal::service('elasticsearch_connector.client_manager');
-    $this->client  = $clientManager->getClientForCluster($this->cluster);
-
-    $this->debug   = (bool) \Drupal::config('elasticsearch_manager.settings')->get('debug')['debug'];
+    $builder = ClientBuilder::create();
+    $builder->setHosts(array($this->host));
+    if ($this->logs && $this->logs !== self::LOGS_DISABLED) {
+      $logger = ClientBuilder::defaultLogger('logs/elasticsearch.log', $this->logs);
+      $builder->setLogger($logger);
+    }
+    $this->client = $builder->build();
   }
 
   /**

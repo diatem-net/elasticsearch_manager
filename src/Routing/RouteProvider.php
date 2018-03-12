@@ -62,11 +62,7 @@ class RouteProvider
     ));
 
     // Local tasks
-    $config = \Drupal::config(sprintf(
-      'elasticsearch_manager.types.%s.%s',
-      \Drupal::config('elasticsearch_manager.settings')->get('cluster'),
-      \Drupal::config('elasticsearch_manager.settings')->get('index')
-    ));
+    $config = \Drupal::config('elasticsearch_manager.types');
     foreach ($config->getRawData() as $id => $active) {
       if ($active) {
         $type =  NodeType::load($id);

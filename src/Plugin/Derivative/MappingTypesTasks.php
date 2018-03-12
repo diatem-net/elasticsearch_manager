@@ -15,11 +15,7 @@ class MappingTypesTasks extends DeriverBase {
     */
     public function getDerivativeDefinitions($base_plugin_definition)
     {
-      $config = \Drupal::config(sprintf(
-        'elasticsearch_manager.types.%s.%s',
-        \Drupal::config('elasticsearch_manager.settings')->get('cluster'),
-        \Drupal::config('elasticsearch_manager.settings')->get('index')
-      ));
+      $config = \Drupal::config('elasticsearch_manager.types');
 
       $base_route = null;
       foreach ($config->getRawData() as $id => $active) {

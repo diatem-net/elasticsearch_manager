@@ -2,6 +2,7 @@
 
 namespace Drupal\elasticsearch_manager\Form;
 
+use Monolog\Logger;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -29,13 +30,7 @@ class ConfigForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => t('Host', array(), array('context' => 'elasticsearch_manager')),
       '#description' => t('Elasticsearch host to use for indexation and search.', array(), array('context' => 'elasticsearch_manager')),
-      '#default_value' => $config->get('host') ?: '127.0.0.1'
-    );
-    $form['port'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Port', array(), array('context' => 'elasticsearch_manager')),
-      '#description' => t('Port to use (9200 by default).', array(), array('context' => 'elasticsearch_manager')),
-      '#default_value' => $config->get('port') ?: '9200'
+      '#default_value' => $config->get('host') ?: 'http://127.0.0.1:9200'
     );
     $form['index'] = array(
       '#type' => 'textfield',
@@ -43,12 +38,17 @@ class ConfigForm extends ConfigFormBase {
       '#description' => t('Index to use for indexation and search.', array(), array('context' => 'elasticsearch_manager')),
       '#default_value' => $config->get('index')
     );
-    $form['debug'] = array(
-      '#type' => 'checkboxes',
+    $form['logs'] = array(
+      '#type' => 'select',
       '#title' => t('Debug', array(), array('context' => 'elasticsearch_manager')),
-      '#description' => t('Enable to see Elastic queries\' JSON.', array(), array('context' => 'elasticsearch_manager')),
-      '#options' => array('debug' => t('Enable', array(), array('context' => 'elasticsearch_manager'))),
-      '#default_value' => $config->get('debug') ?: array(),
+      '#description' => t('Logs level (@see logs/elasticsearch.log).', array(), array('context' => 'elasticsearch_manager')),
+      '#options' => array_merge(
+        array(
+          0 => 'DISABLED'
+        ),
+        array_flip(Logger::getLevels())
+      ),
+      '#default_value' => $config->get('logs') ?: 0,
     );
 
     return $form;
@@ -62,9 +62,8 @@ class ConfigForm extends ConfigFormBase {
 
     $config = $this->config('elasticsearch_manager.settings');
     $config->set('host', $form_state->getValue('host'));
-    $config->set('port', $form_state->getValue('port'));
     $config->set('index', $form_state->getValue('index'));
-    $config->set('debug', $form_state->getValue('debug'));
+    $config->set('logs', $form_state->getValue('logs'));
     $config->save();
 
     return parent::submitForm($form, $form_state);
