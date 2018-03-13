@@ -45,12 +45,4 @@ class MappingFieldFactory
     }
   }
 
-  public static function getDefaultDefinition()
-  {
-    return array(
-      'analyzer'        => 'nGram_analyzer',
-      'search_analyzer' => 'whitespace_analyzer'
-    );
-  }
-
 }

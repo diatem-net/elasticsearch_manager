@@ -26,6 +26,13 @@ class ElasticSearchManager
   private $index;
 
   /**
+    * ElasticSearch logs level.
+    *
+    * @var integer
+    */
+  private $logs;
+
+  /**
     * ElasticSearch client.
     *
     * @var \Elasticsearch\Client
@@ -43,15 +50,40 @@ class ElasticSearchManager
   {
     $this->host  = \Drupal::config('elasticsearch_manager.settings')->get('host');
     $this->index = \Drupal::config('elasticsearch_manager.settings')->get('index');
-    $this->logs  = (bool) \Drupal::config('elasticsearch_manager.settings')->get('debug')['debug'];
+    $this->logs  = \Drupal::config('elasticsearch_manager.settings')->get('logs');
 
     $builder = ClientBuilder::create();
     $builder->setHosts(array($this->host));
     if ($this->logs && $this->logs !== self::LOGS_DISABLED) {
-      $logger = ClientBuilder::defaultLogger('logs/elasticsearch.log', $this->logs);
-      $builder->setLogger($logger);
+      if ((is_file(self::getLogFile()) && is_writable(self::getLogFile()))
+          || is_writable(self::getLogFolder())) {
+        $logger = ClientBuilder::defaultLogger(self::getLogFile(), $this->logs);
+        $builder->setLogger($logger);
+      } else {
+        throw new \Exception(sprintf('Elasticsearch log file is not writable (%s)', self::getLogFile()));
+      }
     }
     $this->client = $builder->build();
+  }
+
+  /**
+   * Get log folder
+   *
+   * @return string
+   */
+  public static function getLogFolder()
+  {
+    return realpath(DRUPAL_ROOT . '/../') . '/logs/';
+  }
+
+  /**
+   * Get log file
+   *
+   * @return string
+   */
+  public static function getLogFile()
+  {
+    return self::getLogFolder() . 'elasticsearch.log';
   }
 
   /**
@@ -162,9 +194,8 @@ class ElasticSearchManager
   *
   * @param array   $query  Query description
   * @param string  $type   Document type
-  * @param boolean $debug  Debug query
   */
-  public function search($query, $type = null, $debug = false)
+  public function search($query, $type = null)
   {
     $params = array(
       'index' => $this->index,

@@ -5,6 +5,7 @@ namespace Drupal\elasticsearch_manager\Form;
 use Monolog\Logger;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\elasticsearch_manager\ElasticSearch\ElasticSearchManager;
 
 class ConfigForm extends ConfigFormBase {
 
@@ -41,13 +42,8 @@ class ConfigForm extends ConfigFormBase {
     $form['logs'] = array(
       '#type' => 'select',
       '#title' => t('Debug', array(), array('context' => 'elasticsearch_manager')),
-      '#description' => t('Logs level (@see logs/elasticsearch.log).', array(), array('context' => 'elasticsearch_manager')),
-      '#options' => array_merge(
-        array(
-          0 => 'DISABLED'
-        ),
-        array_flip(Logger::getLevels())
-      ),
+      '#description' => sprintf(t('Logs are sent to <i>%s</i>', array(), array('context' => 'elasticsearch_manager')), ElasticSearchManager::getLogFile()),
+      '#options' => array(0 => 'DISABLED') + array_flip(Logger::getLevels()),
       '#default_value' => $config->get('logs') ?: 0,
     );
 

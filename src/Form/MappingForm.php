@@ -58,15 +58,34 @@ class MappingForm extends ConfigFormBase
       '#open'  => true
     );
 
+    $mapping_existing = array();
+    foreach ($config->get() as $type => $fields) {
+      foreach ($fields as $key => $value) {
+        if ($value !== 'ignored') {
+          $mapping_existing[$key] = $value;
+        }
+      }
+    }
+
     $indexed = 0;
     foreach ($definitions as $definition) {
       $value = $config->get($type .'.'. $definition->getName());
       if ($value && $value != 'ignored') {
         $indexed++;
+
+        $filtered_options = $mapping_options;
+        if (isset($mapping_existing[$definition->getName()])) {
+          $mapping = $mapping_existing[$definition->getName()];
+          $filtered_options = array(
+            'ignored' => $mapping_options['ignored'],
+            $mapping  => $mapping_options[$mapping]
+          );
+        }
+
         $form['indexed']['mapping_'. $type .'__'. $definition->getName()] = array(
           '#type'          => 'select',
           '#title'         => $definition->getName(),
-          '#options'       => $mapping_options,
+          '#options'       => $filtered_options,
           '#default_value' => $value
         );
       }
@@ -89,10 +108,20 @@ class MappingForm extends ConfigFormBase
       $value = $config->get($type .'.'. $definition->getName());
       if (!$value || $value == 'ignored') {
         $ignored++;
+
+        $filtered_options = $mapping_options;
+        if (isset($mapping_existing[$definition->getName()])) {
+          $mapping = $mapping_existing[$definition->getName()];
+          $filtered_options = array(
+            'ignored' => $mapping_options['ignored'],
+            $mapping  => $mapping_options[$mapping]
+          );
+        }
+
         $form['ignored']['mapping_'. $type .'__'. $definition->getName()] = array(
           '#type'          => 'select',
           '#title'         => $definition->getName(),
-          '#options'       => $mapping_options,
+          '#options'       => $filtered_options,
           '#default_value' => 'ignored'
         );
       }

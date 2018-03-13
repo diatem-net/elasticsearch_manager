@@ -15,6 +15,8 @@ class NodeIndexer
   const OPERATION_NOT_APPLICABLE = 1;
   const OPERATION_SUCCESS = 2;
 
+  const UNIQUE_TYPE = 'elements';
+
   /**
     * ElasticSearch manager.
     *
@@ -37,15 +39,6 @@ class NodeIndexer
         'number_of_replicas' => '0',
         'analysis' => array(
           'analyzer' => array(
-            'nGram_analyzer' => array(
-              'type' => 'custom',
-              'filter' => array(
-                'lowercase',
-                'asciifolding',
-                'nGram_filter'
-              ),
-              'tokenizer' => 'whitespace'
-            ),
             'facet_analyzer' => array(
               'type' => 'custom',
               'tokenizer' => 'keyword'
@@ -66,14 +59,6 @@ class NodeIndexer
                 'asciifolding'
               ),
               'tokenizer' => 'standard'
-            ),
-            'whitespace_analyzer' => array(
-              'type' => 'custom',
-              'filter' => array(
-                'lowercase',
-                'asciifolding'
-              ),
-              'tokenizer' => 'whitespace'
             )
           ),
           'filter' => array(
@@ -128,7 +113,7 @@ class NodeIndexer
       )
     );
 
-    return $this->em->search($params, $node->getType());
+    return $this->em->search($params, self::UNIQUE_TYPE);
   }
 
   /**
@@ -147,8 +132,8 @@ class NodeIndexer
       return self::OPERATION_NOT_APPLICABLE;
     }
 
-    $result = $this->em->indexDocument($node->getType(), $node->id(), $params);
-    if ($result && $result['created'] === false) {
+    $result = $this->em->indexDocument(self::UNIQUE_TYPE, $node->id(), $params);
+    if ($result && $result['result'] !== 'created') {
       return self::OPERATION_ERROR;
     }
 
@@ -182,7 +167,7 @@ class NodeIndexer
       return self::OPERATION_ERROR;
     }
 
-    $index = $this->em->indexDocument($node->getType(), $result->getRawResults()[0]['_id'], $params);
+    $index = $this->em->indexDocument(self::UNIQUE_TYPE, $result->getRawResults()[0]['_id'], $params);
 
     return self::OPERATION_SUCCESS;
   }
@@ -236,26 +221,28 @@ class NodeIndexer
 
     // Get enabled types
     $configTypes = \Drupal::config('elasticsearch_manager.types');
-    $mappings = array();
+    $mappings = array(
+      self::UNIQUE_TYPE => array(
+        'properties' => array()
+      )
+    );
     foreach ($configTypes->getRawData() as $id => $active) {
       if ($active) {
         $type = NodeType::load($id);
+        $mappings[self::UNIQUE_TYPE]['properties']['type'] = array(
+          'type' => 'text',
+          'fielddata' => true // Allow facets
+        );
 
         // Get indexable fields for this type and create mapping
-        $params = array(
-          '_all' => MappingFieldFactory::getDefaultDefinition(),
-          'properties' => array()
-        );
         $configFields = \Drupal::config('elasticsearch_manager.mapping');
         $definitions = \Drupal::entityManager()->getFieldDefinitions('node', $type->id());
         foreach ($definitions as $definition) {
           $value = $configFields->get($type->id() .'.'. $definition->getName());
           if ($value && $value != 'ignored') {
-            $params['properties'][$type->id() .'_'. $definition->getName()] = MappingFieldFactory::create($value)->getDefinition();
+            $mappings[self::UNIQUE_TYPE]['properties'][$definition->getName()] = MappingFieldFactory::create($value)->getDefinition();
           }
         }
-        $mappings[$type->id()] = $params;
-
       }
     }
 
@@ -329,7 +316,9 @@ class NodeIndexer
       return;
     }
 
-    $params = array();
+    $params = array(
+      'type' => $node->getType()
+    );
 
     $config = \Drupal::config('elasticsearch_manager.mapping');
 
@@ -345,11 +334,11 @@ class NodeIndexer
 
       if ($field->getValue()) {
         if ($definition->getFieldStorageDefinition()->isMultiple()) {
-          $params[$node->getType() .'_'. $definition->getName()] = array_map(function($fieldValue) use ($definition) {
+          $params[$definition->getName()] = array_map(function($fieldValue) use ($definition) {
             return $this->prepareFieldValue($definition->getType(), $fieldValue);
           }, $field->getValue());
         } else {
-          $params[$node->getType() .'_'. $definition->getName()] = $this->prepareFieldValue($definition->getType(), $field->getValue()[0]);
+          $params[$definition->getName()] = $this->prepareFieldValue($definition->getType(), $field->getValue()[0]);
         }
       }
     }
