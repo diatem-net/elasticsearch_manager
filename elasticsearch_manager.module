@@ -1,0 +1,74 @@
+<?php
+
+use Drupal\elasticsearch_manager\ElasticSearch\ElasticSearchManager;
+use Drupal\elasticsearch_manager\ElasticSearch\Indexer\NodeIndexer;
+
+function _elasticsearch_manager_get_node_indexer()
+{
+  $em = new ElasticSearchManager();
+  return new NodeIndexer($em);
+}
+
+
+/**
+* Implements hook_node_insert().
+*/
+function elasticsearch_manager_node_insert($node)
+{
+  try {
+    $indexer = _elasticsearch_manager_get_node_indexer();
+    $result = $indexer->insert($node);
+    if ($result == NodeIndexer::OPERATION_SUCCESS) {
+      drupal_set_message(t('The node has been saved to Elasticsearch.', array(), array('context' => 'elasticsearch_manager')));
+    } elseif($result == NodeIndexer::OPERATION_ERROR) {
+      drupal_set_message(t('There was a problem saving this node to Elasticsearch.', array(), array('context' => 'elasticsearch_manager')), 'error');
+    }
+  } catch(\Exception $e) {
+    drupal_set_message(t('Elasticsearch connection problem, this node has not been indexed.', array(), array('context' => 'elasticsearch_manager')), 'error');
+  }
+}
+
+/**
+* Implements hook_node_update().
+*/
+function elasticsearch_manager_node_update($node)
+{
+  try {
+    $indexer = _elasticsearch_manager_get_node_indexer();
+    if ($node->isPublished()) {
+      $result = $indexer->update($node, true);
+      if ($result == NodeIndexer::OPERATION_SUCCESS) {
+        drupal_set_message(t('The node has been updated in Elasticsearch.', array(), array('context' => 'elasticsearch_manager')));
+      } elseif($result == NodeIndexer::OPERATION_ERROR) {
+        drupal_set_message(t('There was a problem updating this node in Elasticsearch.', array(), array('context' => 'elasticsearch_manager')), 'error');
+      }
+    } else {
+      $result = $indexer->delete($node);
+      if ($result == NodeIndexer::OPERATION_SUCCESS) {
+        drupal_set_message(t('The node has been deleted in Elasticsearch.', array(), array('context' => 'elasticsearch_manager')));
+      } elseif($result == NodeIndexer::OPERATION_ERROR) {
+        drupal_set_message(t('There was a problem deleting this node in Elasticsearch.', array(), array('context' => 'elasticsearch_manager')), 'error');
+      }
+    }
+  } catch(\Exception $e) {
+    drupal_set_message(t('Elasticsearch connection problem, this node has not been indexed.', array(), array('context' => 'elasticsearch_manager')), 'error');
+  }
+}
+
+/**
+* Implements hook_node_delete().
+*/
+function elasticsearch_manager_node_delete($node)
+{
+  try {
+    $indexer = _elasticsearch_manager_get_node_indexer();
+    $result = $indexer->delete($node);
+    if ($result == NodeIndexer::OPERATION_SUCCESS) {
+      drupal_set_message(t('The node has been deleted in Elasticsearch.', array(), array('context' => 'elasticsearch_manager')));
+    } elseif($result == NodeIndexer::OPERATION_ERROR) {
+      drupal_set_message(t('There was a problem deleting this node in Elasticsearch.', array(), array('context' => 'elasticsearch_manager')), 'error');
+    }
+  } catch(\Exception $e) {
+    drupal_set_message(t('Elasticsearch connection problem, this node has not been deindexed.', array(), array('context' => 'elasticsearch_manager')), 'error');
+  }
+}

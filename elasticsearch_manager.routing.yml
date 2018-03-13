@@ -1,0 +1,2 @@
+route_callbacks:
+ - '\Drupal\elasticsearch_manager\Routing\RouteProvider::routes'
