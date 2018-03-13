@@ -160,14 +160,14 @@ class NodeIndexer
     }
 
     $result = $this->search($node);
-    if ($result && $result->getTotalResultsNumber() !== 1) {
+    if ($result && $result['hits']['total'] !== 1) {
       if ($orInsert) {
         return $this->insert($node);
       }
       return self::OPERATION_ERROR;
     }
 
-    $index = $this->em->indexDocument(self::UNIQUE_TYPE, $result->getRawResults()[0]['_id'], $params);
+    $index = $this->em->indexDocument(self::UNIQUE_TYPE, $result['hits']['hits'][0]['_id'], $params);
 
     return self::OPERATION_SUCCESS;
   }
@@ -184,11 +184,11 @@ class NodeIndexer
   public function delete($node)
   {
     $result = $this->search($node);
-    if ($result && $result->getTotalResultsNumber() !== 1) {
+    if ($result && $result['hits']['total'] !== 1) {
       return self::OPERATION_NOT_APPLICABLE;
     }
 
-    $result = $this->em->deleteDocument($node->getType(), $result->getRawResults()[0]['_id']);
+    $result = $this->em->deleteDocument($node->getType(), $result['hits']['hits'][0]['_id']);
     if ($result && $result['found'] !== true) {
       return self::OPERATION_ERROR;
     }
