@@ -205,11 +205,6 @@ class ElasticSearchManager
       $params['type'] = $type;
     }
 
-    if ($debug && $this->debug) {
-      $rendered = Markup::create(sprintf('<b>Search query executed:</b><br><pre>%s</pre>', json_encode($query, JSON_PRETTY_PRINT)));
-      drupal_set_message($rendered, 'warning');
-    }
-
     return $this->client->search($params);
   }
 
