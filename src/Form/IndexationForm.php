@@ -35,7 +35,9 @@ class IndexationForm extends FormBase
     foreach ($config->getRawData() as $id => $active) {
       if ($active) {
         $type = NodeType::load($id);
-        $types_names[$type->id()] = $type->label();
+        if ($type) {
+          $types_names[$type->id()] = $type->label();
+        }
       }
     }
     $form['type'] = array(

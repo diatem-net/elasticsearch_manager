@@ -22,16 +22,17 @@ class MappingTypesTasks extends DeriverBase {
         if ($active) {
 
           $type = NodeType::load($id);
-          if (is_null($base_route)) {
-            $base_route = 'elasticsearch_manager.mapping.'. $type->id();
+          if ($type) {
+            if (is_null($base_route)) {
+              $base_route = 'elasticsearch_manager.mapping.'. $type->id();
+            }
+
+            $this->derivatives['elasticsearch_manager.mapping.'. $type->id()] = $base_plugin_definition;
+            $this->derivatives['elasticsearch_manager.mapping.'. $type->id()]['title'] = $type->label();
+            $this->derivatives['elasticsearch_manager.mapping.'. $type->id()]['route_name'] = 'elasticsearch_manager.mapping.'. $type->id();
+            $this->derivatives['elasticsearch_manager.mapping.'. $type->id()]['base_route'] = $base_route;
+            $this->derivatives['elasticsearch_manager.mapping.'. $type->id()]['parent_id'] = 'elasticsearch_manager.mapping_tab';
           }
-
-          $this->derivatives['elasticsearch_manager.mapping.'. $type->id()] = $base_plugin_definition;
-          $this->derivatives['elasticsearch_manager.mapping.'. $type->id()]['title'] = $type->label();
-          $this->derivatives['elasticsearch_manager.mapping.'. $type->id()]['route_name'] = 'elasticsearch_manager.mapping.'. $type->id();
-          $this->derivatives['elasticsearch_manager.mapping.'. $type->id()]['base_route'] = $base_route;
-          $this->derivatives['elasticsearch_manager.mapping.'. $type->id()]['parent_id'] = 'elasticsearch_manager.mapping_tab';
-
         }
       }
 

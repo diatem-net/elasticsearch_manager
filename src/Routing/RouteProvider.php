@@ -66,16 +66,18 @@ class RouteProvider
     foreach ($config->getRawData() as $id => $active) {
       if ($active) {
         $type =  NodeType::load($id);
-        $route_collection->add('elasticsearch_manager.mapping.'. $type->id(), new Route(
-          '/admin/config/elasticsearch-manager/mapping/'. $type->id(),
-          array(
-            '_form' => '\\Drupal\\elasticsearch_manager\\Form\\MappingForm',
-            '_title' => $type->label()
-          ),
-          array(
-            '_permission'  => 'administer elasticsearch_manager',
-          )
-        ));
+        if ($type) {
+          $route_collection->add('elasticsearch_manager.mapping.'. $type->id(), new Route(
+            '/admin/config/elasticsearch-manager/mapping/'. $type->id(),
+            array(
+              '_form' => '\\Drupal\\elasticsearch_manager\\Form\\MappingForm',
+              '_title' => $type->label()
+            ),
+            array(
+              '_permission'  => 'administer elasticsearch_manager',
+            )
+          ));
+        }
       }
     }
 
