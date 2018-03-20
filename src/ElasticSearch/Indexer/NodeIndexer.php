@@ -2,10 +2,13 @@
 
 namespace Drupal\elasticsearch_manager\ElasticSearch\Indexer;
 
+use Drupal\Core\Url;
+use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\file\Entity\File;
-use Drupal\elasticsearch_manager\ElasticSearch\MappingField\MappingFieldFactory;
+use Drupal\elasticsearch_manager\Form\ConfigForm;
 use Drupal\elasticsearch_manager\ElasticSearch\ElasticSearchManager;
+use Drupal\elasticsearch_manager\ElasticSearch\MappingField\MappingFieldFactory;
 
 class NodeIndexer
 {
@@ -15,22 +18,32 @@ class NodeIndexer
   const OPERATION_NOT_APPLICABLE = 1;
   const OPERATION_SUCCESS = 2;
 
-  const UNIQUE_TYPE = 'elements';
-
   /**
-    * ElasticSearch manager.
-    *
-    * @var \Drupal\elasticsearch_manager\ElasticSearch\ElasticSearchManager
-    */
+   * ElasticSearch manager.
+   *
+   * @var \Drupal\elasticsearch_manager\ElasticSearch\ElasticSearchManager
+   */
   protected $em;
 
-  public function __construct(ElasticSearchManager $em) {
-      $this->em = $em;
+  /**
+   * ElasticSearch configuration
+   *
+   * @var array
+   */
+  protected $config;
+
+  public function __construct(ElasticSearchManager $em)
+  {
+    $this->em = $em;
+    $this->config = array(
+      'types' => \Drupal::config('elasticsearch_manager.types'),
+      'mapping' => \Drupal::config('elasticsearch_manager.mapping')
+    );
   }
 
   /**
-    * Return default settings
-    */
+   * Return default settings
+   */
   public static function getDefaultSettings()
   {
     return array(
@@ -95,45 +108,24 @@ class NodeIndexer
   }
 
   /**
-  * Search if node is indexed
-  *
-  * @param object $node
-  *   The node to search.
-  *
-  * @return boolean
-  *   Has the node been found?
-  */
-  public function search($node)
-  {
-    $params = array(
-      'query' => array(
-        'match' => array(
-          '_id' => $node->id()
-        )
-      )
-    );
-
-    return $this->em->search($params, self::UNIQUE_TYPE);
-  }
-
-  /**
-  * Insert a new node in the index.
-  *
-  * @param object $node
-  *   The node that needs to be inserted.
-  *
-  * @return boolean
-  *   Operation's success.
-  */
+   * Insert a new node in the index.
+   *
+   * @param Node $node
+   *   The node that needs to be inserted.
+   *
+   * @return integer
+   *   Operation's success.
+   */
   public function insert($node)
   {
-    $params = $this->prepareNode($node);
+    $params = self::prepareNode($node, $this->config);
     if (!$params) {
       return self::OPERATION_NOT_APPLICABLE;
     }
 
-    $result = $this->em->indexDocument(self::UNIQUE_TYPE, $node->id(), $params);
-    if ($result && $result['result'] !== 'created') {
+    try {
+      $result = $this->em->indexDocument(ConfigForm::DEFAULT_TYPE, $node->id(), $params);
+    } catch (\Exception $e) {
       return self::OPERATION_ERROR;
     }
 
@@ -141,55 +133,19 @@ class NodeIndexer
   }
 
   /**
-  * Update a new node in the index.
-  *
-  * @param object $node
-  *   The node that needs to be updated.
-  *
-  * @param boolean $orInsert
-  *   Should the node be inserted if not found?
-  *
-  * @return boolean
-  *   Operation's success.
-  */
-  public function update($node, $orInsert = false)
-  {
-    $params = $this->prepareNode($node);
-    if (!$params) {
-      return self::OPERATION_NOT_APPLICABLE;
-    }
-
-    $result = $this->search($node);
-    if ($result && $result['hits']['total'] !== 1) {
-      if ($orInsert) {
-        return $this->insert($node);
-      }
-      return self::OPERATION_ERROR;
-    }
-
-    $index = $this->em->indexDocument(self::UNIQUE_TYPE, $result['hits']['hits'][0]['_id'], $params);
-
-    return self::OPERATION_SUCCESS;
-  }
-
-  /**
-    * Delete a new node from the index.
-    *
-    * @param object $node
-    *   The node that needs to be deleted.
-    *
-    * @return boolean
-    *   Operation's success.
-    */
+   * Delete a new node from the index.
+   *
+   * @param Node $node
+   *   The node that needs to be deleted.
+   *
+   * @return integer
+   *   Operation's success.
+   */
   public function delete($node)
   {
-    $result = $this->search($node);
-    if ($result && $result['hits']['total'] !== 1) {
-      return self::OPERATION_NOT_APPLICABLE;
-    }
-
-    $result = $this->em->deleteDocument($node->getType(), $result['hits']['hits'][0]['_id']);
-    if ($result && $result['found'] !== true) {
+    try {
+      $result = $this->em->deleteDocument(ConfigForm::DEFAULT_TYPE, $node->id());
+    } catch (\Exception $e) {
       return self::OPERATION_ERROR;
     }
 
@@ -197,15 +153,15 @@ class NodeIndexer
   }
 
   /**
-    * Index all nodes from the index.
-    *
-    * @return array
-    *   Success and failure amouts:
-    *   array(
-    *     'success' => 41,
-    *     'failure' => 2
-    *   )
-    */
+   * Index all nodes from the index.
+   *
+   * @return array
+   *   Success and failure amouts:
+   *   array(
+   *     'success' => 41,
+   *     'failure' => 2
+   *   )
+   */
   public function indexAll()
   {
     $results = array(
@@ -220,27 +176,27 @@ class NodeIndexer
     $settings = self::getDefaultSettings();
 
     // Get enabled types
-    $configTypes = \Drupal::config('elasticsearch_manager.types');
+    $configTypes = $this->config['types'];
     $mappings = array(
-      self::UNIQUE_TYPE => array(
+      ConfigForm::DEFAULT_TYPE => array(
         'properties' => array()
       )
     );
     foreach ($configTypes->getRawData() as $id => $active) {
       if ($active) {
         $type = NodeType::load($id);
-        $mappings[self::UNIQUE_TYPE]['properties']['type'] = array(
+        $mappings[ConfigForm::DEFAULT_TYPE]['properties']['type'] = array(
           'type' => 'text',
           'fielddata' => true // Allow facets
         );
 
         // Get indexable fields for this type and create mapping
-        $configFields = \Drupal::config('elasticsearch_manager.mapping');
+        $configFields = $this->config['mapping'];
         $definitions = \Drupal::entityManager()->getFieldDefinitions('node', $type->id());
         foreach ($definitions as $definition) {
           $value = $configFields->get($type->id() .'.'. $definition->getName());
           if ($value && $value != 'ignored') {
-            $mappings[self::UNIQUE_TYPE]['properties'][$definition->getName()] = MappingFieldFactory::create($value)->getDefinition();
+            $mappings[ConfigForm::DEFAULT_TYPE]['properties'][$definition->getName()] = MappingFieldFactory::create($value)->getDefinition();
           }
         }
       }
@@ -255,8 +211,7 @@ class NodeIndexer
     $types_names = array();
     foreach ($configTypes->getRawData() as $id => $active) {
       if ($active) {
-        $type = NodeType::load($id);
-        $typeResults = $this->indexAllFromType($type->id());
+        $typeResults = $this->indexAllFromType($id);
         $results['success'] += $typeResults['success'];
         $results['failure'] += $typeResults['failure'];
       }
@@ -266,68 +221,89 @@ class NodeIndexer
   }
 
   /**
-    * Index all nodes with a type from the index.
-    *
-    * @param string $type
-    *   The type that needs to be fully indexed.
-    *
-    * @return array
-    *   Success and failure amouts:
-    *   array(
-    *     'success' => 41,
-    *     'failure' => 2
-    *   )
-    */
+   * Index all nodes with a type from the index.
+   *
+   * @param string $type
+   *   The type that needs to be fully indexed.
+   *
+   * @return array
+   *   Success and failure amouts:
+   *   array(
+   *     'success' => 41,
+   *     'failure' => 2
+   *   )
+   */
   public function indexAllFromType($type)
   {
+    $max_execution_time = ini_set('max_execution_time', -1);
+
     $results = array(
       'success' => 0,
       'failure' => 0
     );
 
-    // Search for all nodes from type
+    // Count all nodes from type
     $query = \Drupal::entityQuery('node')
       ->condition('type', $type)
       ->condition('status', NODE_PUBLISHED);
     $nids = $query->execute();
+    $total = count($nids);
 
-    // Index all nodes
-    $nodes = \Drupal::entityManager()->getStorage('node')->loadMultiple($nids);
-    foreach ($nodes as $node) {
-      if ($this->insert($node)) {
-        $results['success']++;
-      } else {
-        $results['failure']++;
-      }
+    $batchSize = (int) \Drupal::config('elasticsearch_manager.settings')->get('batch_size');
+    if (!$batchSize) {
+      $batchSize = ConfigForm::DEFAULT_BATCH_SIZE;;
     }
+
+    // Index all nodes, by batch
+    $client = new \GuzzleHttp\Client();
+    for ($i = 0; $i < $total; $i += $batchSize) {
+      $url = Url::fromRoute(
+        'elasticsearch_manager.api.batch',
+        array(
+          'type' => $type,
+          'from' => $i
+        ),
+        array('absolute' => true)
+      );
+      $response = $client->get($url->toString());
+      $localResults = json_decode($response->getBody(), true);
+      $results['success'] += $localResults['success'];
+      $results['failure'] += $localResults['failure'];
+    }
+
+    ini_set('max_execution_time', $max_execution_time);
 
     return $results;
   }
 
-
   /**
-  * Prepare node data for indexation
-  *
-  * @param \Drupal\node\Entity\Node $node
-  */
-  public function prepareNode($node)
+   * Prepare node data for indexation
+   *
+   * @param Node $node
+   *   The node to be indexed or updated
+   *
+   * @param array $config
+   *   Elasticsearch config (avoid non-static calls)
+   *
+   * @return array
+   *   Node description ready to send to ElasticSearch
+   */
+  protected static function prepareNode($node, $config)
   {
-    if (!is_object($node)) {
+    if (!($node instanceof Node)) {
       return;
     }
 
     $params = array(
-      'type' => $node->getType()
+      'type'   => $node->getType()
     );
-
-    $config = \Drupal::config('elasticsearch_manager.mapping');
 
     // Add fields
     $fields = $node->getFields();
     foreach ($fields as $field) {
       $definition = $field->getFieldDefinition();
 
-      $mapping = $config->get($node->getType() .'.'. $definition->getName());
+      $mapping = $config['mapping']->get($node->getType() .'.'. $definition->getName());
       if (!$mapping || $mapping == 'ignored') {
         continue;
       }
@@ -335,10 +311,10 @@ class NodeIndexer
       if ($field->getValue()) {
         if ($definition->getFieldStorageDefinition()->isMultiple()) {
           $params[$definition->getName()] = array_map(function($fieldValue) use ($definition) {
-            return $this->prepareFieldValue($definition->getType(), $fieldValue);
+            return self::prepareFieldValue($definition->getType(), $fieldValue);
           }, $field->getValue());
         } else {
-          $params[$definition->getName()] = $this->prepareFieldValue($definition->getType(), $field->getValue()[0]);
+          $params[$definition->getName()] = self::prepareFieldValue($definition->getType(), $field->getValue()[0]);
         }
       }
     }
@@ -347,12 +323,18 @@ class NodeIndexer
   }
 
   /**
-  * Prepare field value for indexation
-  *
-  * @param string $type
-  * @param array  $rawValue
-  */
-  private function prepareFieldValue($type, $rawValue)
+   * Prepare field value for indexation
+   *
+   * @param string $type
+   *   Field type to be prepared.
+   *
+   * @param array  $rawValue
+   *   Raw value of the field, may be updated to fit to ElasticSearch needs
+   *
+   * @return array
+   *   Field description ready to send to ElasticSearch
+   */
+  protected static function prepareFieldValue($type, $rawValue)
   {
     $value = null;
 

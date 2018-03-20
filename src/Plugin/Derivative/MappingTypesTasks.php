@@ -8,35 +8,37 @@ use Drupal\node\Entity\NodeType;
 /**
  * Defines dynamic tasks for mappings.
  */
-class MappingTypesTasks extends DeriverBase {
+class MappingTypesTasks extends DeriverBase
+{
 
-    /**
-    * {@inheritdoc}
-    */
-    public function getDerivativeDefinitions($base_plugin_definition)
-    {
-      $config = \Drupal::config('elasticsearch_manager.types');
+  /**
+  * {@inheritdoc}
+  */
+  public function getDerivativeDefinitions($base_plugin_definition)
+  {
+    $config = \Drupal::config('elasticsearch_manager.types');
 
-      $base_route = null;
-      foreach ($config->getRawData() as $id => $active) {
-        if ($active) {
+    $base_route_name = null;
+    foreach ($config->getRawData() as $id => $active) {
+      if ($active) {
 
-          $type = NodeType::load($id);
-          if ($type) {
-            if (is_null($base_route)) {
-              $base_route = 'elasticsearch_manager.mapping.'. $type->id();
-            }
-
-            $this->derivatives['elasticsearch_manager.mapping.'. $type->id()] = $base_plugin_definition;
-            $this->derivatives['elasticsearch_manager.mapping.'. $type->id()]['title'] = $type->label();
-            $this->derivatives['elasticsearch_manager.mapping.'. $type->id()]['route_name'] = 'elasticsearch_manager.mapping.'. $type->id();
-            $this->derivatives['elasticsearch_manager.mapping.'. $type->id()]['base_route'] = $base_route;
-            $this->derivatives['elasticsearch_manager.mapping.'. $type->id()]['parent_id'] = 'elasticsearch_manager.mapping_tab';
+        $type = NodeType::load($id);
+        if ($type) {
+          $route_name = sprintf('elasticsearch_manager.mapping.%s', $type->id());
+          if (is_null($base_route_name)) {
+            $base_route_name = $route_name;
           }
+
+          $this->derivatives[$route_name] = $base_plugin_definition;
+          $this->derivatives[$route_name]['title'] = $type->label();
+          $this->derivatives[$route_name]['route_name'] = $route_name;
+          $this->derivatives[$route_name]['base_route'] = $base_route;
+          $this->derivatives[$route_name]['parent_id'] = 'elasticsearch_manager.mapping_tab';
         }
       }
-
-      return $this->derivatives;
     }
+
+    return $this->derivatives;
+  }
 
 }

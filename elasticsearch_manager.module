@@ -36,7 +36,7 @@ function elasticsearch_manager_node_update($node)
   try {
     $indexer = _elasticsearch_manager_get_node_indexer();
     if ($node->isPublished()) {
-      $result = $indexer->update($node, true);
+      $result = $indexer->insert($node);
       if ($result == NodeIndexer::OPERATION_SUCCESS) {
         drupal_set_message(t('The node has been updated in Elasticsearch.', array(), array('context' => 'elasticsearch_manager')));
       } elseif($result == NodeIndexer::OPERATION_ERROR) {

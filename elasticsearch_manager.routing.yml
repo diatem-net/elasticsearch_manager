@@ -1,2 +1,64 @@
+# Backoffice forms
+elasticsearch_manager.config:
+  path: '/admin/config/elasticsearch-manager/config'
+  defaults:
+    _form: '\Drupal\elasticsearch_manager\Form\ConfigForm'
+    _title: 'ElasticSearch Manager'
+  requirements:
+    _permission: 'administer elasticsearch_manager'
+
+elasticsearch_manager.types:
+  path: '/admin/config/elasticsearch-manager/types'
+  defaults:
+    _form: '\Drupal\elasticsearch_manager\Form\TypesForm'
+    _title: 'ElasticSearch Manager'
+  requirements:
+    _permission: 'administer elasticsearch_manager'
+
+elasticsearch_manager.mapping:
+  path: '/admin/config/elasticsearch-manager/mapping'
+  defaults:
+    _form: '\Drupal\elasticsearch_manager\Form\MappingForm'
+    _title: 'ElasticSearch Manager'
+  requirements:
+    _permission: 'administer elasticsearch_manager'
+
+elasticsearch_manager.indexation:
+  path: '/admin/config/elasticsearch-manager/indexation'
+  defaults:
+    _form: '\Drupal\elasticsearch_manager\Form\IndexationForm'
+    _title: 'ElasticSearch Manager'
+  requirements:
+    _permission: 'administer elasticsearch_manager'
+
 route_callbacks:
  - '\Drupal\elasticsearch_manager\Routing\RouteProvider::routes'
+
+# Public API
+elasticsearch_manager.api.index:
+  path: '/elasticsearch-manager/index/{nid}'
+  defaults:
+    _controller: '\Drupal\elasticsearch_manager\Controller\ApiController::index'
+    _title: 'ElasticSearch Manager'
+  requirements:
+    _access: 'TRUE'
+    nid: '^\d+$'
+
+elasticsearch_manager.api.delete:
+  path: '/elasticsearch-manager/delete/{nid}'
+  defaults:
+    _controller: '\Drupal\elasticsearch_manager\Controller\ApiController::delete'
+    _title: 'ElasticSearch Manager'
+  requirements:
+    _access: 'TRUE'
+    nid: '^\d+$'
+
+elasticsearch_manager.api.batch:
+  path: '/elasticsearch-manager/batch/{type}/{from}'
+  defaults:
+    _controller: '\Drupal\elasticsearch_manager\Controller\ApiController::batch'
+    _title: 'ElasticSearch Manager'
+    from: 0
+  requirements:
+    _access: 'TRUE'
+    from: '^\d+$'

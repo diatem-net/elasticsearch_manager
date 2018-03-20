@@ -3,7 +3,7 @@ type: module
 description: 'Manages Drupal nodes indexation in Drupal.'
 package: Diatem
 core: 8.x
-version: '8.x-1.0'
+version: '8.x-6.0.2'
 configure: elasticsearch_manager.config
 dependencies:
   - file

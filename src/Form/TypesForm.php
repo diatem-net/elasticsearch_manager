@@ -5,7 +5,6 @@ namespace Drupal\elasticsearch_manager\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\elasticsearch_manager\ElasticSearch\ElasticSearchManager;
-use Drupal\elasticsearch_manager\ElasticSearch\Indexer\NodeIndexer;
 
 class TypesForm extends ConfigFormBase
 {

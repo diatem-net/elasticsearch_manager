@@ -24,7 +24,6 @@ class IndexationForm extends FormBase
    */
   public function buildForm(array $form, FormStateInterface $form_state)
   {
-
     $form['description'] = array(
       '#markup' => '<p>' . t('Indexation will first delete a type before indexing its documents.', array(), array('context' => 'elasticsearch_manager')) . '</p>',
     );
@@ -51,15 +50,18 @@ class IndexationForm extends FormBase
     $form['all_types'] = array(
       '#type' => 'checkboxes',
       '#title' => null,
+      '#description' => t('This option will delete the whole index before recreating it with the defined mappings.', array(), array('context' => 'elasticsearch_manager')),
       '#options' => array(
         'all_types' => t('Index all types?', array(), array('context' => 'elasticsearch_manager'))
       ),
       '#default_value' => array()
     );
 
-    $form['run'] = array(
+    $form['actions']['#type'] = 'actions';
+    $form['actions']['run'] = array(
       '#type' => 'submit',
-      '#value' => t('Run indexation', array(), array('context' => 'elasticsearch_manager'))
+      '#value' => t('Run indexation', array(), array('context' => 'elasticsearch_manager')),
+      '#button_type' => 'primary'
     );
 
     return $form;
@@ -104,7 +106,6 @@ class IndexationForm extends FormBase
       $results['success'],
       $results['success'] + $results['failure']
     ), $status);
-
   }
 
 }

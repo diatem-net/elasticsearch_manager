@@ -12,38 +12,38 @@ class ElasticSearchManager
   const LOGS_DISABLED = 0;
 
   /**
-    * ElasticSearch host.
-    *
-    * @var string
-    */
+   * ElasticSearch host.
+   *
+   * @var string
+   */
   private $host;
 
   /**
-    * ElasticSearch index.
-    *
-    * @var string
-    */
+   * ElasticSearch index.
+   *
+   * @var string
+   */
   private $index;
 
   /**
-    * ElasticSearch logs level.
-    *
-    * @var integer
-    */
+   * ElasticSearch logs level.
+   *
+   * @var integer
+   */
   private $logs;
 
   /**
-    * ElasticSearch client.
-    *
-    * @var \Elasticsearch\Client
-    */
+   * ElasticSearch client.
+   *
+   * @var \Elasticsearch\Client
+   */
   private $client;
 
   /**
-    * Debug mode
-    *
-    * @var boolean
-    */
+   * Debug mode
+   *
+   * @var boolean
+   */
   private $debug;
 
   public function __construct()
@@ -87,8 +87,8 @@ class ElasticSearchManager
   }
 
   /**
-    * Close the index
-    */
+   * Close the index
+   */
   public function closeIndex()
   {
     $params = array(
@@ -101,8 +101,8 @@ class ElasticSearchManager
   }
 
   /**
-    * Open the index
-    */
+   * Open the index
+   */
   public function openIndex()
   {
     $params = array(
@@ -115,8 +115,8 @@ class ElasticSearchManager
   }
 
   /**
-    * Delete the index
-    */
+   * Delete the index
+   */
   public function deleteIndex()
   {
     $params = array(
@@ -129,11 +129,14 @@ class ElasticSearchManager
   }
 
   /**
-    * Create the index
-    *
-    * @param array $mappings  Mappings description
-    * @param array $settings  Settings description
-    */
+   * Create the index
+   *
+   * @param array $mappings
+   *   Mappings description
+   *
+   * @param array $settings
+   *   Settings description
+   */
   public function createIndex($mappings = array(), $settings = array())
   {
     $params = array(
@@ -149,15 +152,18 @@ class ElasticSearchManager
     return false;
   }
 
-
-
   /**
-  * Index a document
-  *
-  * @param string  $type  Document type
-  * @param integer $id    Document id (can be null)
-  * @param array   $data  Document data
-  */
+   * Index a document
+   *
+   * @param string  $type
+   *   Document type
+   *
+   * @param integer $id
+   *   Document id (can be null)
+   *
+   * @param array   $data
+   *   Document data
+   */
   public function indexDocument($type, $id, $data)
   {
     $params = array(
@@ -172,11 +178,14 @@ class ElasticSearchManager
   }
 
   /**
-  * Delete a document
-  *
-  * @param string  $type  Document type
-  * @param integer $id    Document id
-  */
+   * Delete a document
+   *
+   * @param string  $type
+   *   Document type
+   *
+   * @param integer $id
+   *   Document id
+   */
   public function deleteDocument($type, $id)
   {
     $params = array(
@@ -187,14 +196,15 @@ class ElasticSearchManager
     return $this->client->delete($params);
   }
 
-
-
   /**
-  * Execute a search query
-  *
-  * @param array   $query  Query description
-  * @param string  $type   Document type
-  */
+   * Execute a search query
+   *
+   * @param array   $query
+   *   Query description
+   *
+   * @param string  $type
+   *   Document type
+   */
   public function search($query, $type = null)
   {
     $params = array(

@@ -5,7 +5,6 @@ namespace Drupal\elasticsearch_manager\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\elasticsearch_manager\ElasticSearch\MappingField\MappingFieldFactory;
-use Drupal\elasticsearch_manager\ElasticSearch\Indexer\NodeIndexer;
 
 class MappingForm extends ConfigFormBase
 {
@@ -69,7 +68,7 @@ class MappingForm extends ConfigFormBase
 
     $indexed = 0;
     foreach ($definitions as $definition) {
-      $value = $config->get($type .'.'. $definition->getName());
+      $value = $config->get(sprintf('%s.%s', $type, $definition->getName()));
       if ($value && $value != 'ignored') {
         $indexed++;
 
@@ -82,7 +81,7 @@ class MappingForm extends ConfigFormBase
           );
         }
 
-        $form['indexed']['mapping_'. $type .'__'. $definition->getName()] = array(
+        $form['indexed'][sprintf('mapping_%s__%s', $type, $definition->getName())] = array(
           '#type'          => 'select',
           '#title'         => $definition->getName(),
           '#options'       => $filtered_options,
@@ -105,7 +104,7 @@ class MappingForm extends ConfigFormBase
 
     $ignored = 0;
     foreach ($definitions as $definition) {
-      $value = $config->get($type .'.'. $definition->getName());
+      $value = $config->get(sprintf('%s.%s', $type, $definition->getName()));
       if (!$value || $value == 'ignored') {
         $ignored++;
 
@@ -118,7 +117,7 @@ class MappingForm extends ConfigFormBase
           );
         }
 
-        $form['ignored']['mapping_'. $type .'__'. $definition->getName()] = array(
+        $form['ignored'][sprintf('mapping_%s__%s', $type, $definition->getName())] = array(
           '#type'          => 'select',
           '#title'         => $definition->getName(),
           '#options'       => $filtered_options,
@@ -148,7 +147,7 @@ class MappingForm extends ConfigFormBase
       if (!preg_match('/^mapping_(?<type>.+)__(?<field>.+)$/', $key, $matches)) {
         continue;
       }
-      $config->set($matches['type'] .'.'. $matches['field'], $value);
+      $config->set(sprintf('%s.%s', $matches['type'], $matches['field']), $value);
     }
 
     $config->save();
