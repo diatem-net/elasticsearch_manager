@@ -18,15 +18,15 @@ class MappingTypesTasks extends DeriverBase
   {
     $config = \Drupal::config('elasticsearch_manager.types');
 
-    $base_route_name = null;
+    $base_route = null;
     foreach ($config->getRawData() as $id => $active) {
       if ($active) {
 
         $type = NodeType::load($id);
         if ($type) {
           $route_name = sprintf('elasticsearch_manager.mapping.%s', $type->id());
-          if (is_null($base_route_name)) {
-            $base_route_name = $route_name;
+          if (is_null($base_route)) {
+            $base_route = $route_name;
           }
 
           $this->derivatives[$route_name] = $base_plugin_definition;
