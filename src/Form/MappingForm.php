@@ -58,7 +58,7 @@ class MappingForm extends ConfigFormBase
     );
 
     $mapping_existing = array();
-    foreach ($config->get() as $type => $fields) {
+    foreach ($config->get() as $fields) {
       foreach ($fields as $key => $value) {
         if ($value !== 'ignored') {
           $mapping_existing[$key] = $value;
