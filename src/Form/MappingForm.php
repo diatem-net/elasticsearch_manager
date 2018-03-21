@@ -30,13 +30,13 @@ class MappingForm extends ConfigFormBase
     $type = preg_replace('/elasticsearch_manager\.mapping\./', '', $route_name);
 
     if ($type === 'elasticsearch_manager.mapping') {
-      drupal_set_message(t('Please select the type to map', array(), array('context' => 'elasticsearh_manager')), 'warning');
+      drupal_set_message(t('Please select the type to map', array(), array('context' => 'elasticsearch_manager')), 'warning');
       return $form;
     }
 
     $definitions = \Drupal::entityManager()->getFieldDefinitions('node', $type);
     if (empty($definitions)) {
-      drupal_set_message(sprintf(t('The type "%s" is not recognized', array(), array('context' => 'elasticsearh_manager')), $type), 'error');
+      drupal_set_message(sprintf(t('The type "%s" is not recognized', array(), array('context' => 'elasticsearch_manager')), $type), 'error');
       return $form;
     }
 
@@ -53,7 +53,7 @@ class MappingForm extends ConfigFormBase
 
     $form['indexed'] = array(
       '#type'  => 'details',
-      '#title' => t('Indexed fields', array(), array('context' => 'elasticsearh_manager')),
+      '#title' => t('Indexed fields', array(), array('context' => 'elasticsearch_manager')),
       '#open'  => true
     );
 
@@ -92,13 +92,13 @@ class MappingForm extends ConfigFormBase
 
     if ($indexed == 0) {
       $form['indexed']['empty'] = array(
-        '#markup' => t('No indexed fields for this type.', array(), array('context' => 'elasticsearh_manager')),
+        '#markup' => t('No indexed fields for this type.', array(), array('context' => 'elasticsearch_manager')),
       );
     }
 
     $form['ignored'] = array(
       '#type'  => 'details',
-      '#title' => t('Ignored fields', array(), array('context' => 'elasticsearh_manager')),
+      '#title' => t('Ignored fields', array(), array('context' => 'elasticsearch_manager')),
       '#open'  => false
     );
 
@@ -128,7 +128,7 @@ class MappingForm extends ConfigFormBase
 
     if ($ignored == 0) {
       $form['ignored']['empty'] = array(
-        '#markup' => t('No ignored fields for this type.', array(), array('context' => 'elasticsearh_manager')),
+        '#markup' => t('No ignored fields for this type.', array(), array('context' => 'elasticsearch_manager')),
       );
     }
 
@@ -153,7 +153,7 @@ class MappingForm extends ConfigFormBase
     $config->save();
 
     $return = parent::submitForm($form, $form_state);
-    drupal_set_message(t('Don\'t forget to index the modified types, to take your new mapping in account.', array(), array('context' => 'elasticsearh_manager')), 'warning');
+    drupal_set_message(t('Don\'t forget to index the modified types, to take your new mapping in account.', array(), array('context' => 'elasticsearch_manager')), 'warning');
     return $return;
   }
 

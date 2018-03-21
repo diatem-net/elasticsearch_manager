@@ -68,7 +68,7 @@ class TypesForm extends ConfigFormBase
     $config->save();
 
     $return = parent::submitForm($form, $form_state);
-    drupal_set_message(t('Don\'t forget to define your mappings.', array(), array('context' => 'elasticsearh_manager')), 'warning');
+    drupal_set_message(t('Don\'t forget to define your mappings.', array(), array('context' => 'elasticsearch_manager')), 'warning');
     return $return;
   }
 
