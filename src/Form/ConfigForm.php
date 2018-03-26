@@ -65,7 +65,7 @@ class ConfigForm extends ConfigFormBase
   public function submitForm(array &$form, FormStateInterface $form_state)
   {
     $config = $this->config('elasticsearch_manager.settings');
-    $config->set('host', $form_state->getValue('host'));
+    $config->set('host', rtrim($form_state->getValue('host'), '/'));
     $config->set('index', $form_state->getValue('index'));
     $config->set('logs', $form_state->getValue('logs'));
     $config->set('batch_size', $form_state->getValue('batch_size'));
