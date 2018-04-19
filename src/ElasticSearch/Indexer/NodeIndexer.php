@@ -175,6 +175,10 @@ class NodeIndexer
 
     $settings = self::getDefaultSettings();
 
+    // Get all available languages
+    $langs = \Drupal::languageManager()->getLanguages();
+    $defaultLang = \Drupal::languageManager()->getdefaultLanguage();
+
     // Get enabled types
     $configTypes = $this->config['types'];
     $mappings = array(
@@ -194,9 +198,16 @@ class NodeIndexer
         $configFields = $this->config['mapping'];
         $definitions = \Drupal::entityManager()->getFieldDefinitions('node', $type->id());
         foreach ($definitions as $definition) {
-          $value = $configFields->get($type->id() .'.'. $definition->getName());
-          if ($value && $value != 'ignored') {
-            $mappings[ConfigForm::DEFAULT_TYPE]['properties'][$definition->getName()] = MappingFieldFactory::create($value)->getDefinition();
+          $value = $configFields->get(sprintf('%s.%s', $type->id(), $definition->getName()));
+          if ($value && $value != MappingFieldFactory::IGNORED) {
+            $mappings[ConfigForm::DEFAULT_TYPE]['properties'][$definition->getName()] = MappingFieldFactory::create($value)->getDefinition($defaultLang);
+
+            // Multi-language field
+            if ($value == MappingFieldFactory::TYPE_STRING_MULTILANG && $definition->isTranslatable()) {
+              foreach ($langs as $lang) {
+                $mappings[ConfigForm::DEFAULT_TYPE]['properties'][sprintf('%s__%s', $definition->getName(), $lang->getId())] = MappingFieldFactory::create($value)->getDefinition($lang);
+              }
+            }
           }
         }
       }
@@ -298,25 +309,56 @@ class NodeIndexer
       'type'   => $node->getType()
     );
 
-    // Add fields
-    $fields = $node->getFields();
-    foreach ($fields as $field) {
-      $definition = $field->getFieldDefinition();
+    // Get all available languages, and node translations
+    $langs = \Drupal::languageManager()->getLanguages();
+    $defaultLang = \Drupal::languageManager()->getdefaultLanguage();
+    $languages = $node->getTranslationLanguages();
+    $translations = array();
+    foreach ($languages as $langcode => $language) {
+      $translation = $node->getTranslation($langcode);
+      $translations[$langcode] = $translation->getFields();
+    }
 
-      $mapping = $config['mapping']->get($node->getType() .'.'. $definition->getName());
-      if (!$mapping || $mapping == 'ignored') {
+    $fields = $node->getFields();
+
+    $definitions = $node->getFieldDefinitions();
+    foreach ($definitions as $definition) {
+
+      $mapping = $config['mapping']->get(sprintf('%s.%s', $node->getType(), $definition->getName()));
+      if (!$mapping || $mapping == MappingFieldFactory::IGNORED) {
         continue;
       }
 
-      if ($field->getValue()) {
-        if ($definition->getFieldStorageDefinition()->isMultiple()) {
-          $params[$definition->getName()] = array_map(function($fieldValue) use ($definition) {
-            return self::prepareFieldValue($definition->getType(), $fieldValue);
-          }, $field->getValue());
-        } else {
-          $params[$definition->getName()] = self::prepareFieldValue($definition->getType(), $field->getValue()[0]);
+      // Multi-language field
+      if ($definition->isTranslatable()) {
+        foreach ($translations as $langcode => $translation) {
+          $field = $translation[$definition->getName()];
+          if ($field->getValue()) {
+            if ($definition->getFieldStorageDefinition()->isMultiple()) {
+              $params[sprintf('%s__%s', $definition->getName(), $langcode)] = array_map(function($fieldValue) use ($definition) {
+                return self::prepareFieldValue($definition->getType(), $fieldValue);
+              }, $field->getValue());
+            } else {
+              $params[sprintf('%s__%s', $definition->getName(), $langcode)] = self::prepareFieldValue($definition->getType(), $field->getValue()[0]);
+            }
+          }
         }
       }
+
+      // Single-language field
+      else {
+        $field = $fields[$definition->getName()];
+        if ($field->getValue()) {
+          if ($definition->getFieldStorageDefinition()->isMultiple()) {
+            $params[$definition->getName()] = array_map(function($fieldValue) use ($definition) {
+              return self::prepareFieldValue($definition->getType(), $fieldValue);
+            }, $field->getValue());
+          } else {
+            $params[$definition->getName()] = self::prepareFieldValue($definition->getType(), $field->getValue()[0]);
+          }
+        }
+      }
+
     }
 
     return $params;

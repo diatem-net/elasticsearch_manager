@@ -41,14 +41,15 @@ class MappingForm extends ConfigFormBase
     }
 
     $mapping_options = array(
-      'ignored'          => t('Ignored', array(), array('context' => 'elasticsearch_manager')),
-      'boolean'          => MappingFieldFactory::create('boolean')->getName(),
-      'date'             => MappingFieldFactory::create('date')->getName(),
-      'integer'          => MappingFieldFactory::create('integer')->getName(),
-      'string'           => MappingFieldFactory::create('string')->getName(),
-      'string_french'    => MappingFieldFactory::create('string_french')->getName(),
-      'string_keyword'   => MappingFieldFactory::create('string_keyword')->getName(),
-      'entity_reference' => MappingFieldFactory::create('entity_reference')->getName()
+      MappingFieldFactory::IGNORED               => t('Ignored', array(), array('context' => 'elasticsearch_manager')),
+      MappingFieldFactory::TYPE_BOOLEAN          => MappingFieldFactory::create(MappingFieldFactory::TYPE_BOOLEAN)->getName(),
+      MappingFieldFactory::TYPE_DATE             => MappingFieldFactory::create(MappingFieldFactory::TYPE_DATE)->getName(),
+      MappingFieldFactory::TYPE_INTEGER          => MappingFieldFactory::create(MappingFieldFactory::TYPE_INTEGER)->getName(),
+      MappingFieldFactory::TYPE_STRING           => MappingFieldFactory::create(MappingFieldFactory::TYPE_STRING)->getName(),
+      MappingFieldFactory::TYPE_STRING_FRENCH    => MappingFieldFactory::create(MappingFieldFactory::TYPE_STRING_FRENCH)->getName(),
+      MappingFieldFactory::TYPE_STRING_MULTILANG => MappingFieldFactory::create(MappingFieldFactory::TYPE_STRING_MULTILANG)->getName(),
+      MappingFieldFactory::TYPE_STRING_KEYWORD   => MappingFieldFactory::create(MappingFieldFactory::TYPE_STRING_KEYWORD)->getName(),
+      MappingFieldFactory::TYPE_ENTITY_REFERENCE => MappingFieldFactory::create(MappingFieldFactory::TYPE_ENTITY_REFERENCE)->getName()
     );
 
     $form['indexed'] = array(
@@ -60,7 +61,7 @@ class MappingForm extends ConfigFormBase
     $mapping_existing = array();
     foreach ($config->get() as $fields) {
       foreach ($fields as $key => $value) {
-        if ($value !== 'ignored') {
+        if ($value !== MappingFieldFactory::IGNORED) {
           $mapping_existing[$key] = $value;
         }
       }
@@ -69,15 +70,15 @@ class MappingForm extends ConfigFormBase
     $indexed = 0;
     foreach ($definitions as $definition) {
       $value = $config->get(sprintf('%s.%s', $type, $definition->getName()));
-      if ($value && $value != 'ignored') {
+      if ($value && $value != MappingFieldFactory::IGNORED) {
         $indexed++;
 
         $filtered_options = $mapping_options;
         if (isset($mapping_existing[$definition->getName()])) {
           $mapping = $mapping_existing[$definition->getName()];
           $filtered_options = array(
-            'ignored' => $mapping_options['ignored'],
-            $mapping  => $mapping_options[$mapping]
+            MappingFieldFactory::IGNORED => $mapping_options[MappingFieldFactory::IGNORED],
+            $mapping                     => $mapping_options[$mapping]
           );
         }
 
@@ -96,7 +97,7 @@ class MappingForm extends ConfigFormBase
       );
     }
 
-    $form['ignored'] = array(
+    $form[MappingFieldFactory::IGNORED] = array(
       '#type'  => 'details',
       '#title' => t('Ignored fields', array(), array('context' => 'elasticsearch_manager')),
       '#open'  => false
@@ -105,29 +106,29 @@ class MappingForm extends ConfigFormBase
     $ignored = 0;
     foreach ($definitions as $definition) {
       $value = $config->get(sprintf('%s.%s', $type, $definition->getName()));
-      if (!$value || $value == 'ignored') {
+      if (!$value || $value == MappingFieldFactory::IGNORED) {
         $ignored++;
 
         $filtered_options = $mapping_options;
         if (isset($mapping_existing[$definition->getName()])) {
           $mapping = $mapping_existing[$definition->getName()];
           $filtered_options = array(
-            'ignored' => $mapping_options['ignored'],
-            $mapping  => $mapping_options[$mapping]
+            MappingFieldFactory::IGNORED => $mapping_options[MappingFieldFactory::IGNORED],
+            $mapping                     => $mapping_options[$mapping]
           );
         }
 
-        $form['ignored'][sprintf('mapping_%s__%s', $type, $definition->getName())] = array(
+        $form[MappingFieldFactory::IGNORED][sprintf('mapping_%s__%s', $type, $definition->getName())] = array(
           '#type'          => 'select',
           '#title'         => $definition->getName(),
           '#options'       => $filtered_options,
-          '#default_value' => 'ignored'
+          '#default_value' => MappingFieldFactory::IGNORED
         );
       }
     }
 
     if ($ignored == 0) {
-      $form['ignored']['empty'] = array(
+      $form[MappingFieldFactory::IGNORED]['empty'] = array(
         '#markup' => t('No ignored fields for this type.', array(), array('context' => 'elasticsearch_manager')),
       );
     }
