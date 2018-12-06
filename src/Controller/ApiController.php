@@ -147,5 +147,16 @@ class ApiController
 
     return new JsonResponse($data);
   }
+  
+	/**
+   * Check if index is alive.
+   *
+   * @return JsonResponse
+   */
+  public function checkIndex()
+  {
+    $em = new ElasticSearchManager();
+    return JsonResponse($em->checkIndex());
+  }
 
 }

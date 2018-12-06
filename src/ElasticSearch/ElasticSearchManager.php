@@ -217,5 +217,31 @@ class ElasticSearchManager
 
     return $this->client->search($params);
   }
+  
+     /**
+   *
+   * Test if index is alive
+   *
+   */
+  public function checkIndex()
+  {
+  
+    $data = 0;
+	
+    $ch = curl_init();
+    curl_setopt( $ch,CURLOPT_URL, $this->host.'/'.$this->index );
+    curl_setopt( $ch,CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch,CURLOPT_SSL_VERIFYPEER, false );
+    $result = curl_exec($ch);
+    curl_close( $ch );
+
+    $retour = json_decode($result,true);
+    if($retour){
+      $data = $retour['version']['number'];
+      $data = 1;
+    }
+   
+    return $data;
+  }
 
 }
