@@ -64,7 +64,7 @@ elasticsearch_manager.api.batch:
     from: '^\d+$'
     
 elasticsearch_manager.api.checkindex:
-  path: '/elasticsearch-manager/checkindex'
+  path: '/elasticsearch/checkindex'
   defaults:
     _controller: '\Drupal\elasticsearch_manager\Controller\ApiController::checkIndex'
     _title: 'ElasticSearch Manager'

@@ -236,7 +236,7 @@ class ElasticSearchManager
     curl_close( $ch );
 
     $retour = json_decode($result,true);
-    if($retour){
+    if($retour && !isset($retour['error'])){
       $data = 1;
     }
    
