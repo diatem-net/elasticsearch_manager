@@ -62,3 +62,14 @@ elasticsearch_manager.api.batch:
   requirements:
     _access: 'TRUE'
     from: '^\d+$'
+    
+elasticsearch_manager.api.checkindex:
+  path: '/elasticsearch-manager/checkindex'
+  defaults:
+    _controller: '\Drupal\elasticsearch_manager\Controller\ApiController::checkIndex'
+    _title: 'ElasticSearch Manager'
+    from: 0
+  requirements:
+    _access: 'TRUE'
+    
+    

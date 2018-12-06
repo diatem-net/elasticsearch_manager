@@ -237,7 +237,6 @@ class ElasticSearchManager
 
     $retour = json_decode($result,true);
     if($retour){
-      $data = $retour['version']['number'];
       $data = 1;
     }
    
