@@ -225,9 +225,7 @@ class ElasticSearchManager
    */
   public function checkIndex()
   {
-  
-    $data = 0;
-	
+    $data = 0;	
     $ch = curl_init();
     curl_setopt( $ch,CURLOPT_URL, $this->host.'/'.$this->index );
     curl_setopt( $ch,CURLOPT_RETURNTRANSFER, true );

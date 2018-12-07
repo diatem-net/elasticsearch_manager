@@ -153,10 +153,16 @@ class ApiController
    *
    * @return JsonResponse
    */
-  public function checkIndex()
+  public static function checkIndex()
   {
-    $em = new ElasticSearchManager();
-    return JsonResponse($em->checkIndex());
+	$em = new ElasticSearchManager(); 
+	$result = $em->checkIndex();	
+	$response = new JsonResponse($result);  
+	
+	$response->setStatusCode(200);
+	if($result==0){
+		$response->setStatusCode(500);	
+	}
+    return $response;
   }
-
 }
